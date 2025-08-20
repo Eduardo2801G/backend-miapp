@@ -1,0 +1,9 @@
+{
+  "name": "api-cloud",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "mongodb": "^6.8.0"
+  }
+}
