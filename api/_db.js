@@ -1,24 +1,25 @@
-// api/_db.js
-import { MongoClient } from "mongodb";
+import clientPromise from "./_db";
 
-const uri = process.env.MONGODB_URI;     // set en Vercel
-const DB_NAME = process.env.MONGODB_DB || "miapp";
+export default async function handler(req, res) {
+  try {
+    const client = await clientPromise;
+    const db = client.db("miapp"); // nombre de la base
+    const users = db.collection("users");
 
-let client;
-let db;
+    if (req.method === "POST") {
+      const { nombre, apellido, cedula } = req.body;
+      const result = await users.insertOne({ nombre, apellido, cedula });
+      return res.status(201).json({ ok: true, id: result.insertedId });
+    }
 
-export async function getDb() {
-  if (!client) {
-    client = new MongoClient(uri, { maxPoolSize: 5 });
-    await client.connect();
-    db = client.db(DB_NAME);
+    if (req.method === "GET") {
+      const all = await users.find().toArray();
+      return res.status(200).json(all);
+    }
+
+    res.setHeader("Allow", ["GET", "POST"]);
+    return res.status(405).end("Method Not Allowed");
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
   }
-  return db;
-}
-
-// Helper CORS simple
-export function withCors(res) {
-  res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
